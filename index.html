@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-FINANCE - Sistema de Gestão Financeira</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="screen auth-screen active">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>K-FINANCE</h1>
+                    <p>Faça login para acessar sua conta</p>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">E-mail:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Senha:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Entrar</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" onclick="showRegister()">Criar conta</a>
+                    <a href="#" onclick="showForgotPassword()">Esqueci minha senha</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Cadastro -->
+    <div id="registerScreen" class="screen auth-screen">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Criar Conta</h1>
+                    <p>Cadastre-se para começar a usar o K-FINANCE</p>
+                </div>
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerName">Nome completo:</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">E-mail:</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Senha:</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar senha:</label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Criar Conta</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" onclick="showLogin()">Já tenho uma conta</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Recuperação de Senha -->
+    <div id="forgotPasswordScreen" class="screen auth-screen">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Recuperar Senha</h1>
+                    <p>Digite seu e-mail para recuperar sua senha</p>
+                </div>
+                <form id="forgotPasswordForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="forgotEmail">E-mail:</label>
+                        <input type="email" id="forgotEmail" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Enviar</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" onclick="showLogin()">Voltar ao login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela Principal -->
+    <div id="mainScreen" class="screen main-screen">
+        <header class="main-header">
+            <div class="header-content">
+                <h1>K-FINANCE</h1>
+                <div class="user-info">
+                    <span id="userNameDisplay">Usuário</span>
+                    <button id="logoutBtn" class="logout-btn">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="main-nav">
+            <button class="nav-btn active" data-section="dashboard" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" data-section="expenses" onclick="showSection('expenses')">Despesas</button>
+            <button class="nav-btn" data-section="income" onclick="showSection('income')">Receitas</button>
+            <button class="nav-btn" data-section="supermarket" onclick="showSection('supermarket')">Supermercado</button>
+            <button class="nav-btn" data-section="cards" onclick="showSection('cards')">Cartões</button>
+            <button class="nav-btn" data-section="categories" onclick="showSection('categories')">Categorias</button>
+            <button class="nav-btn" data-section="export" onclick="showSection('export')">Exportar</button>
+        </nav>
+
+        <main class="main-content">
+            <!-- Dashboard -->
+            <section id="dashboard" class="content-section active">
+                <h2>Dashboard Financeiro</h2>
+                <div class="dashboard-cards">
+                    <div class="dashboard-card income">
+                        <h3>Total de Receitas</h3>
+                        <div class="amount" id="totalIncome">R$ 0,00</div>
+                    </div>
+                    <div class="dashboard-card expense">
+                        <h3>Total de Despesas</h3>
+                        <div class="amount" id="totalExpenses">R$ 0,00</div>
+                    </div>
+                    <div class="dashboard-card balance">
+                        <h3>Saldo Atual</h3>
+                        <div class="amount" id="currentBalance">R$ 0,00</div>
+                    </div>
+                    <div class="dashboard-card category">
+                        <h3>Maior Gasto por Categoria</h3>
+                        <p id="totalCategories">Nenhuma despesa registrada</p>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-container">
+                        <h3>Gastos por Categoria</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Evolução Mensal</h3>
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Produtos Mais Comprados</h3>
+                        <canvas id="supermarketChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Gastos por Cartão</h3>
+                        <canvas id="cardsChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Gastos por Estabelecimento</h3>
+                        <canvas id="establishmentChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Evolução Supermercado vs Cartões</h3>
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Despesas -->
+            <section id="expenses" class="content-section">
+                <h2>Gestão de Despesas</h2>
+                <div class="section-tabs">
+                    <button class="tab-btn active" data-tab="form" onclick="showTab('expenses', 'form')">Formulário Individual</button>
+                    <button class="tab-btn" data-tab="saved" onclick="showTab('expenses', 'saved')">Dados Salvos</button>
+                </div>
+                
+                <div id="expenses-form" class="tab-content active" data-tab="form">
+                    <form id="expenseForm" class="data-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expenseDate">Data:</label>
+                                <input type="date" id="expenseDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expenseCategory">Categoria:</label>
+                                <select id="expenseCategory" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Alimentação">Alimentação</option>
+                                    <option value="Transporte">Transporte</option>
+                                    <option value="Moradia">Moradia</option>
+                                    <option value="Saúde">Saúde</option>
+                                    <option value="Educação">Educação</option>
+                                    <option value="Lazer">Lazer</option>
+                                    <option value="Vestuário">Vestuário</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expenseDescription">Descrição:</label>
+                                <input type="text" id="expenseDescription" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expenseValue">Valor (R$):</label>
+                                <input type="number" id="expenseValue" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expensePayment">Método de Pagamento:</label>
+                                <select id="expensePayment" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="PIX">PIX</option>
+                                    <option value="Transferência">Transferência</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="expenseObservations">Observações:</label>
+                                <textarea id="expenseObservations" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Adicionar Despesa</button>
+                    </form>
+                </div>
+                
+                <div id="expenses-saved" class="tab-content" data-tab="saved">
+                    <div class="saved-data-container">
+                        <h3>Despesas Registradas</h3>
+                        <div class="table-container">
+                            <table id="expensesSavedTable" class="saved-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Pagamento</th>
+                                        <th>Observações</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Receitas -->
+            <section id="income" class="content-section">
+                <h2>Gestão de Receitas</h2>
+                <div class="section-tabs">
+                    <button class="tab-btn active" data-tab="form" onclick="showTab('income', 'form')">Formulário Individual</button>
+                    <button class="tab-btn" data-tab="saved" onclick="showTab('income', 'saved')">Dados Salvos</button>
+                </div>
+                
+                <div id="income-form" class="tab-content active" data-tab="form">
+                    <form id="incomeForm" class="data-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="incomeDate">Data:</label>
+                                <input type="date" id="incomeDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="incomeCategory">Categoria:</label>
+                                <select id="incomeCategory" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Salário">Salário</option>
+                                    <option value="Freelance">Freelance</option>
+                                    <option value="Investimentos">Investimentos</option>
+                                    <option value="Vendas">Vendas</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="incomeDescription">Descrição:</label>
+                                <input type="text" id="incomeDescription" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="incomeValue">Valor (R$):</label>
+                                <input type="number" id="incomeValue" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="incomeSource">Origem:</label>
+                                <input type="text" id="incomeSource" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="incomeObservations">Observações:</label>
+                                <textarea id="incomeObservations" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Adicionar Receita</button>
+                    </form>
+                </div>
+                
+                <div id="income-saved" class="tab-content" data-tab="saved">
+                    <div class="saved-data-container">
+                        <h3>Receitas Registradas</h3>
+                        <div class="table-container">
+                            <table id="incomeSavedTable" class="saved-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Origem</th>
+                                        <th>Observações</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Supermercado -->
+            <section id="supermarket" class="content-section">
+                <h2>Gestão de Supermercado</h2>
+                <div class="section-tabs">
+                    <button class="tab-btn active" data-tab="form" onclick="showTab('supermarket', 'form')">Formulário Individual</button>
+                    <button class="tab-btn" data-tab="saved" onclick="showTab('supermarket', 'saved')">Dados Salvos</button>
+                </div>
+                
+                <div id="supermarket-form" class="tab-content active" data-tab="form">
+                    <form id="supermarketForm" class="data-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supermarketDate">Data:</label>
+                                <input type="date" id="supermarketDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="supermarketProduct">Produto:</label>
+                                <input type="text" id="supermarketProduct" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supermarketQuantity">Quantidade:</label>
+                                <input type="number" id="supermarketQuantity" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="supermarketUnitValue">Valor Unitário (R$):</label>
+                                <input type="number" id="supermarketUnitValue" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supermarketTotalValue">Valor Total (R$):</label>
+                                <input type="number" id="supermarketTotalValue" step="0.01" min="0" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="supermarketStore">Loja:</label>
+                                <input type="text" id="supermarketStore" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supermarketPayment">Método de Pagamento:</label>
+                                <select id="supermarketPayment" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="PIX">PIX</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Adicionar Item</button>
+                    </form>
+                </div>
+                
+                <div id="supermarket-saved" class="tab-content" data-tab="saved">
+                    <div class="saved-data-container">
+                        <h3>Compras de Supermercado Registradas</h3>
+                        <div class="table-container">
+                            <table id="supermarketSavedTable" class="saved-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Produto</th>
+                                        <th>Quantidade</th>
+                                        <th>Valor Unitário</th>
+                                        <th>Valor Total</th>
+                                        <th>Loja</th>
+                                        <th>Pagamento</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cartões -->
+            <section id="cards" class="content-section">
+                <h2>Gestão de Cartões</h2>
+                <div class="section-tabs">
+                    <button class="tab-btn active" data-tab="form" onclick="showTab('cards', 'form')">Formulário Individual</button>
+                    <button class="tab-btn" data-tab="saved" onclick="showTab('cards', 'saved')">Dados Salvos</button>
+                </div>
+                
+                <div id="cards-form" class="tab-content active" data-tab="form">
+                    <form id="cardsForm" class="data-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardName">Nome do Cartão:</label>
+                                <input type="text" id="cardName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardDate">Data da Compra:</label>
+                                <input type="date" id="cardDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardEstablishment">Estabelecimento:</label>
+                                <input type="text" id="cardEstablishment" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardValue">Valor (R$):</label>
+                                <input type="number" id="cardValue" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardInstallments">Parcelas:</label>
+                                <input type="number" id="cardInstallments" min="1" max="24" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardCategory">Categoria:</label>
+                                <select id="cardCategory" required>
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardStatus">Status:</label>
+                                <select id="cardStatus" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Pendente">Pendente</option>
+                                    <option value="Pago">Pago</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Adicionar Compra</button>
+                    </form>
+                </div>
+                
+                <div id="cards-saved" class="tab-content" data-tab="saved">
+                    <div class="saved-data-container">
+                        <h3>Compras de Cartão Registradas</h3>
+                        <div class="table-container">
+                            <table id="cardsSavedTable" class="saved-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cartão</th>
+                                        <th>Data</th>
+                                        <th>Estabelecimento</th>
+                                        <th>Valor</th>
+                                        <th>Parcelas</th>
+                                        <th>Categoria</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categorias -->
+            <section id="categories" class="content-section">
+                <h2>Gestão de Categorias</h2>
+                <form id="categoryForm" class="data-form" onsubmit="event.preventDefault(); addCategory();">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoryName">Nome da Categoria:</label>
+                            <input type="text" id="categoryName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoryType">Tipo:</label>
+                            <select id="categoryType" required>
+                                <option value="">Selecione...</option>
+                                <option value="Despesa">Despesa</option>
+                                <option value="Receita">Receita</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Adicionar Categoria</button>
+                </form>
+                
+                <div class="categories-list">
+                    <h3>Categorias Existentes</h3>
+                    <div id="categoriesGrid" class="categories-grid"></div>
+                </div>
+            </section>
+
+            <!-- Exportar -->
+            <section id="export" class="content-section">
+                <h2>Exportar Dados</h2>
+                <div class="export-options">
+                    <div class="export-type">
+                        <h3>Tipo de Exportação</h3>
+                        <label>
+                            <input type="radio" name="exportType" value="all" checked>
+                            Exportar todas as abas
+                        </label>
+                        <label>
+                            <input type="radio" name="exportType" value="single">
+                            Exportar aba específica
+                        </label>
+                    </div>
+                    
+                    <div class="single-sheet-options">
+                        <label for="singleSheetSelect">Selecionar aba:</label>
+                        <select id="singleSheetSelect" disabled>
+                            <option value="expenses">Despesas</option>
+                            <option value="income">Receitas</option>
+                            <option value="supermarket">Supermercado</option>
+                            <option value="cards">Cartões</option>
+                            <option value="categories">Categorias</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="exportToExcel()" class="export-btn">Gerar Planilha Excel</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Marca d'água / Footer -->
+    <footer class="watermark-footer">
+        <div class="watermark-content">
+            <p>💻 Desenvolvido por <strong>Kaynan Monteiro</strong> | K-Finance © 2025</p>
+            <p class="watermark-subtitle">Sistema de Gestão Financeira Pessoal</p>
+        </div>
+    </footer>
+
+    <!-- Marca d'água flutuante (discreta) -->
+    <div class="floating-watermark">
+        <span>by Kaynan Monteiro</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
